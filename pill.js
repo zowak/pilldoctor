@@ -6,12 +6,12 @@ const ROTATION_VECTORS = [
 ];
 export default class Pill{
 
-    constructor(position, color1, color2, fragmentSize, raster){
+    constructor(position, image1, image2, fragmentSize, raster){
         this.position = position;
 
-        this.pillFragment1 =  new PillFragment(position,color1,raster, fragmentSize);
+        this.pillFragment1 =  new PillFragment(position,image1,raster, fragmentSize);
         let fragmet2Pos = {x: this.position.x + 1, y: this.position.y}
-        this.pillFragment2 =  new PillFragment(fragmet2Pos,color2,raster,fragmentSize);
+        this.pillFragment2 =  new PillFragment(fragmet2Pos,image2,raster,fragmentSize);
 
         this.fragmentSize = fragmentSize;
         this.raster = raster;
@@ -54,19 +54,18 @@ export default class Pill{
 }
 
 class PillFragment{
-    constructor(position, color, raster, fragmentSize){
+    constructor(position, image, raster, fragmentSize){
         this.position = position;
-        this.color = color;
+        this.image = image;
         this.raster = raster;
         this.fragmentSize = fragmentSize;
     }
 
-    draw(ctx,){
-        ctx.fillStyle = this.color; 
-        ctx.fillRect(   this.position.x * this.fragmentSize, 
-                        this.position.y * this.fragmentSize, 
-                        this.fragmentSize, 
-                        this.fragmentSize);
+    draw(ctx){
+        ctx.drawImage(  this.image, 
+                        this.position.x * this.fragmentSize,
+                        this.position.y * this.fragmentSize
+                        )
     }
 
     move(vector){

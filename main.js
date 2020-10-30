@@ -1,5 +1,6 @@
 import Pill from './pill.js';
 import Raster from './raster.js';
+import ImageManager from './imageManager.js';
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -23,17 +24,26 @@ const pillColors = [
 ]
 
 // init Image Load
-const imageNames = ["blue_pill", "red_pill", "yellow_pill"];
-const imageCollection = [];
-let loadedImages = 0;
+let allImagesLoaded = false;
+const pillImageNames = ["blue_pill", "red_pill", "yellow_pill"];
+const pillImages = [];
 
-imageNames.forEach(n => {
-    let img = new Image();
-    img.src = "./img/" + n + ".png";
-    img.onload = () => loadedImages++;
-    imageCollection[n] = img;
+const images = new ImageManager(pillImageNames, () => {
+    pillImageNames.forEach(n => {
+        pillImages.push(images.getImage(n));
+        allImagesLoaded = true;
+        console.log("all pills loaded");
+    });
 });
+images.loadImages();
 
+
+
+
+
+
+
+// game variables
 
 var fallingTiles = [];
 
@@ -78,21 +88,10 @@ document.addEventListener('keyup', (e) => {
     } 
   
   });
-
-
 setInterval(draw,60);
 
-function imageLoaded(){
-    loadedImages++;
-}
-
-function allImagesLoaded(){
-    return(loadedImages == imageNames.length);
-}
-
-
 function draw(){
-    if(allImagesLoaded()){
+    if(allImagesLoaded){
         update();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         raster.draw(ctx);
@@ -100,7 +99,7 @@ function draw(){
     }else{
         ctx.fillStyle = 'black';
         ctx.font = '20px Courier';
-        ctx.fillText(loadedImages + ' of ' + imageNames.length + " loaded",  25, 25);
+        ctx.fillText("loading images",  25, 25);
     }
 }
 
@@ -162,12 +161,12 @@ function settlePill(){
 }
 
 function spawnPill(){
-    let colorIdx1 = getRndInteger(0, pillColors.length);
-    let colorIdx2 = getRndInteger(0, pillColors.length);
+    let imageIdx1 = getRndInteger(0, pillImages.length);
+    let imageIdx2 = getRndInteger(0, pillImages.length);
 
     pill = new Pill(    spawnPosition, 
-                        pillColors[colorIdx1], 
-                        pillColors[colorIdx2], 
+                        pillImages[imageIdx1], 
+                        pillImages[imageIdx2], 
                         RASTER_SIZE, 
                         raster);
 
