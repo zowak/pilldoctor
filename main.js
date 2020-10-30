@@ -15,13 +15,6 @@ var raster = new Raster(10,20,RASTER_SIZE);
 var pill =  null;
 
 const spawnPosition = {x: 4, y: 0};
-const pillColors = [
-    '#F00',
-    '#0F0',
-//    '#00F',
- //   '#FF0',
-//    '#F0F',
-]
 
 // init Image Load
 let allImagesLoaded = false;
@@ -38,13 +31,7 @@ const images = new ImageManager(pillImageNames, () => {
 images.loadImages();
 
 
-
-
-
-
-
 // game variables
-
 var fallingTiles = [];
 
 

@@ -1,4 +1,6 @@
 import Pill from './pill.js';
+import PillFragment from './pillFragment.js';
+
 
 const VECTORS = [
     [ 1, 0],
@@ -27,24 +29,8 @@ export default class Raster{
         for(let x = 0; x < this.width; x++){
             for(let y = 0; y < this.height; y++){
 
-
-                /*
-                ctx.beginPath();
-                ctx.rect(   x * this.rastersize,
-                                y * this.rastersize,
-                                this.rastersize,
-                                this.rastersize);
-                ctx.strokeStyle="green";
-                ctx.stroke();
-                */
-
-                if(this.tiles[x][y] !== null){
-                    ctx.fillStyle = this.tiles[x][y];
-                    ctx.fillRect(
-                        x * this.rastersize,
-                        y * this.rastersize,
-                        this.rastersize,
-                        this.rastersize);
+                if(this.tiles[x][y] instanceof PillFragment ){
+                    this.tiles[x][y].draw(ctx);
                 }
 
             }
@@ -64,8 +50,8 @@ export default class Raster{
     }
 
     pastePill(pill){
-        this.tiles[pill.pillFragment1.position.x][pill.pillFragment1.position.y] = pill.pillFragment1.color;
-        this.tiles[pill.pillFragment2.position.x][pill.pillFragment2.position.y] = pill.pillFragment2.color;
+        this.tiles[pill.pillFragment1.position.x][pill.pillFragment1.position.y] = pill.pillFragment1;
+        this.tiles[pill.pillFragment2.position.x][pill.pillFragment2.position.y] = pill.pillFragment2;
 
         console.log("Tiles to Remove: " + this.getTilesToRemove().length);
 
