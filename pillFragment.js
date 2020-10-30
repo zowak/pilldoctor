@@ -1,9 +1,10 @@
 export default class PillFragment{
-    constructor(position, image, raster, fragmentSize){
+    constructor(position, image, raster, fragmentSize, pill){
         this.position = position;
         this.image = image;
         this.raster = raster;
         this.fragmentSize = fragmentSize;
+        this.pill = pill;
     }
 
     draw(ctx){

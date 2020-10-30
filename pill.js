@@ -11,9 +11,9 @@ export default class Pill{
     constructor(position, image1, image2, fragmentSize, raster){
         this.position = position;
 
-        this.pillFragment1 =  new PillFragment(position,image1,raster, fragmentSize);
+        this.pillFragment1 =  new PillFragment(position,image1,raster, fragmentSize, this);
         let fragmet2Pos = {x: this.position.x + 1, y: this.position.y}
-        this.pillFragment2 =  new PillFragment(fragmet2Pos,image2,raster,fragmentSize);
+        this.pillFragment2 =  new PillFragment(fragmet2Pos,image2,raster,fragmentSize, this);
 
         this.fragmentSize = fragmentSize;
         this.raster = raster;

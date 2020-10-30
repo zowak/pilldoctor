@@ -16,9 +16,11 @@ export default class Raster{
         this.height = height;
         this.rastersize = rastersize;
         this.tiles = [];
+        this.fallingPills = false;
 
         this.init();
     }
+
 
     draw(ctx){
 
@@ -53,7 +55,9 @@ export default class Raster{
         this.tiles[pill.pillFragment1.position.x][pill.pillFragment1.position.y] = pill.pillFragment1;
         this.tiles[pill.pillFragment2.position.x][pill.pillFragment2.position.y] = pill.pillFragment2;
 
-        console.log("Tiles to Remove: " + this.getTilesToRemove().length);
+       if(this.getTilesToRemove().length > 0){
+            this.updateFloatingTiles();
+       }
 
     }
 
@@ -88,29 +92,56 @@ export default class Raster{
         return tilesToRemove;
     }
 
-    getFallingTiles(){
-        const fallingTiles = [];
+    updateFloatingTiles(){
+        this.fallingPills = false;
 
         for(let x = 0; x < this.width; x++){
-            for(let y = 0; y < this.height - 1; y++){
+            for(let y = this.height -2; y >= 0; y--){
+                let pos = {x: x,y: y};
+                if(this.isFloatingTile(pos)){
+                    const p = this.tiles[pos.x][pos.y];
+                    this.tiles[x][y] = null;
+                    p.move({x: 0, y: 1});
+                    this.tiles[x][y+1] = p;
 
-                let pos = {x: x, y: y};
-
-                if(this.isFallingTile(pos)){
-                    fallingTiles.push(pos);
+                    this.fallingPills = true;
                 }
             }
         }
-
-        return fallingTiles;
     }
-    
 
-    isFallingTile(position){
-        return( position.y < this.height -1  && 
-                this.tiles[position.x][position.y] != null && 
-                this.tiles[position.x][position.y+1] != null 
-                );
+    isFloatingTile(position){
+        return( 
+                (
+                    position.y < this.height -1  && 
+                    this.tiles[position.x][position.y] != null && 
+                    this.tiles[position.x][position.y] instanceof PillFragment &&
+                    !this.pillStickToOtherFragment(position) &&
+                    this.tiles[position.x][position.y+1] == null 
+                )
+            );
+    }
+
+    pillStickToOtherFragment(position){
+
+        const f = this.tiles[position.x][position.y];
+        const posLeft = {x: position.x -1, y: position.y};
+        const posRight = {x: position.x +1, y: position.y};
+
+        if( this.isInside(posLeft) && 
+            this.tiles[posLeft.x][posLeft.y] instanceof PillFragment &&
+            this.tiles[posLeft.x][posLeft.y].pill == f.pill
+        )
+                return true;
+        
+        if( this.isInside(posRight) && 
+            this.tiles[posRight.x][posRight.y] instanceof PillFragment &&
+            this.tiles[posRight.x][posRight.y].pill == f.pill
+        )
+                    return true;
+
+        return false;
+
     }
 
     checkForCompleteRow(position){
@@ -133,16 +164,6 @@ export default class Raster{
     }
 
 
-    moveTilesTowardsGround(tiles){
-
-        tiles.forEach(t => {
-            let color = this.tiles[t.x][t.y];
-            this.tiles[t.x][t.y+1] = color;
-            this.tiles[t.x][t.y] = null;
-
-        });
-    }
-
 
     getSameTilesInARow(position, vector){
 
@@ -150,9 +171,11 @@ export default class Raster{
 
         let t = 0;
         let pos = position;
-        let startColor = this.tiles[pos.x][pos.y];
+        let startImage = this.tiles[pos.x][pos.y].image;
 
-        while(this.isInside(pos) && this.tiles[pos.x][pos.y] == startColor){
+        while(  this.isInside(pos) && 
+                this.tiles[pos.x][pos.y] != null &&
+                this.tiles[pos.x][pos.y].image == startImage){
             
             tiles.push(pos);
 

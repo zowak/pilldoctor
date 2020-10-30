@@ -18,7 +18,11 @@ const spawnPosition = {x: 4, y: 0};
 
 // init Image Load
 let allImagesLoaded = false;
-const pillImageNames = ["blue_pill", "red_pill", "yellow_pill"];
+const pillImageNames = [
+    "blue_pill", 
+   "red_pill", 
+    "yellow_pill"
+];
 const pillImages = [];
 
 const images = new ImageManager(pillImageNames, () => {
@@ -44,16 +48,16 @@ var upPressed   = false;
 
 document.addEventListener('keyup', (e) => {
 
-    if (e.code === "ArrowLeft"){
+    if (e.code === "ArrowLeft" || e.code === "KeyA"){
         leftPressed = false;
     }       
-    else if (e.code === "ArrowRight"){
+    else if (e.code === "ArrowRight" || e.code === "KeyD"){
         rightPressed = false;
     } 
-    else if (e.code === "ArrowDown"){
+    else if (e.code === "ArrowDown" || e.code === "KeyS"){
         downPressed = false;
     }  
-    else if (e.code === "ArrowUp"){
+    else if (e.code === "ArrowUp" || e.code === "KeyW"){
         upPressed = false;
     } 
   
@@ -61,16 +65,16 @@ document.addEventListener('keyup', (e) => {
 
   document.addEventListener('keydown', (e) => {
 
-    if (e.code === "ArrowLeft"){
+    if (e.code === "ArrowLeft" || e.code === "KeyA"){
         leftPressed = true;
     }       
-    else if (e.code === "ArrowRight"){
+    else if (e.code === "ArrowRight" || e.code === "KeyD"){
         rightPressed = true;
     } 
-    else if (e.code === "ArrowDown"){
+    else if (e.code === "ArrowDown" || e.code === "KeyS"){
         downPressed = true;
     } 
-    else if (e.code === "ArrowUp"){
+    else if (e.code === "ArrowUp" || e.code === "KeyW"){
         upPressed = true;
     } 
   
@@ -82,7 +86,7 @@ function draw(){
         update();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         raster.draw(ctx);
-        pill.draw(ctx);
+        if(pill != null)pill.draw(ctx);
     }else{
         ctx.fillStyle = 'black';
         ctx.font = '20px Courier';
@@ -95,39 +99,42 @@ function update(){
     var now = Date.now();
     var dt = now - lastUpdate;
 
+    if(!raster.fallingPills){
+        if (pill == null) spawnPill();
 
-    if (pill == null) spawnPill();
+        if(dt >=gameSpeed){
+            lastUpdate = now;
 
-    if(dt >=gameSpeed){
-        lastUpdate = now;
+            if(fallingTiles.length > 0 ){
+                raster.moveTilesTowardsGround(fallingTiles);
+                fallingTiles = raster.getFallingTiles();
+            }
 
-        if(fallingTiles.length > 0 ){
-            raster.moveTilesTowardsGround(fallingTiles);
-            fallingTiles = raster.getFallingTiles();
+
+            // move pill towards ground
+            if(!pill.move({x: 0, y: 1})){
+                settlePill();
+            }
+
+            
         }
 
 
-        // move pill towards ground
-        if(!pill.move({x: 0, y: 1})){
-            settlePill();
+        if(upPressed){
+            pill.rotate();
+            upPressed = false;
         }
 
-        
+        if(leftPressed) pill.move({x: -1, y: 0});
+        if(rightPressed) pill.move({x: 1, y: 0});
+        if(downPressed){
+            if(!pill.move({x:  0, y: 1})){
+                settlePill();
+            }
+        } 
+    }else{
+        raster.updateFloatingTiles();
     }
-
-
-    if(upPressed){
-        pill.rotate();
-        upPressed = false;
-    }
-
-    if(leftPressed) pill.move({x: -1, y: 0});
-    if(rightPressed) pill.move({x: 1, y: 0});
-    if(downPressed){
-        if(!pill.move({x:  0, y: 1})){
-            settlePill();
-        }
-    } 
 
 }
 
