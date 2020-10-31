@@ -1,22 +1,24 @@
 import Pill from './pill.js';
 import PillFragment from './pillFragment.js';
+import Virus from './virus.js';
+
+
 
 const DOWN_VECTOR = {x: 0, y: 1};
-const VECTORS = [
-    [ 1, 0],
-//    [-1, 0],
-    [ 0, 1],
-//    [ 0,-1],
-]
 
 export default class Raster{
 
-    constructor(width, height, rastersize){
+    constructor(width, height, rastersize, fragement_effect_image){
         this.width = width;
         this.height = height;
         this.rastersize = rastersize;
+
+        this.fragement_effect_image = fragement_effect_image;
+
         this.tiles = [];
+
         this.fragmentsAreFalling = false;
+        this.removedTiles = [];
 
         this.init();
     }
@@ -31,12 +33,18 @@ export default class Raster{
         for(let x = 0; x < this.width; x++){
             for(let y = 0; y < this.height; y++){
 
-                if(this.tiles[x][y] instanceof PillFragment ){
+                if( this.tiles[x][y] instanceof PillFragment ||
+                    this.tiles[x][y] instanceof Virus){
                     this.tiles[x][y].draw(ctx);
                 }
 
             }
         }
+        
+        this.removedTiles.forEach(t => {
+            ctx.drawImage(  this.fragement_effect_image, t.position.x * this.rastersize,t.position.y * this.rastersize );
+        });
+        this.removedTiles = [];
     }
 
     init(){
@@ -59,14 +67,17 @@ export default class Raster{
 
     checkForCompleteLines(position){
         const tilesToRemove = this.checkForCompleteLineHorizontal(position).concat(this.checkForCompleteLineVertical(position));
+        this.removedTiles = tilesToRemove;
         this.clearTiles(tilesToRemove);
     }
 
     clearTiles(tiles){
         tiles.forEach(t => {
             this.tiles[t.position.x][t.position.y] = null;
-            t.pill.destroyFragment(t);
-            this.fragmentsAreFalling = true;
+            if(t instanceof PillFragment){
+                t.pill.destroyFragment(t);
+                this.fragmentsAreFalling = true;
+            }
         });
     }
 
@@ -85,16 +96,20 @@ export default class Raster{
         // look right 
         for(let x = position.x + 1; x < this.width; x++){
             let t = this.tiles[x][position.y];
-            if(t != null && startTile.image == t.image){
+            if(t != null && startTile.color == t.color){
                 tiles.push(t);
+            }else{
+                break;
             }
         }
 
         //look left 
         for(let x = position.x - 1; x >= 0; x--){
             let t = this.tiles[x][position.y];
-            if(t != null && startTile.image == t.image){
+            if(t != null && startTile.color == t.color){
                 tiles.push(t);
+            }else{
+                break;
             }
         }
 
@@ -113,16 +128,20 @@ export default class Raster{
         // look under 
         for(let y = position.y + 1; y < this.height; y++){
             let t = this.tiles[position.x][y];
-            if(t != null && startTile.image == t.image){
+            if(t != null && startTile.color == t.color){
                 tiles.push(t);
+            }else{
+                break;
             }
         }
 
         //look above 
         for(let y = position.y - 1; y >= 0; y--){
             let t = this.tiles[position.x][y];
-            if(t != null && startTile.image == t.image){
+            if(t != null && startTile.color == t.color){
                 tiles.push(t);
+            }else{
+                break;
             }
         }
 
@@ -145,6 +164,7 @@ export default class Raster{
     }
 
     update(){
+        
        // update falling tiles
        this.fragmentsAreFalling = false;
 
@@ -162,6 +182,8 @@ export default class Raster{
                 }
            }
        }
+
+
     }
 
    
@@ -178,28 +200,5 @@ export default class Raster{
     }
     
 
-    /*
-    pillStickToOtherFragment(position){
-
-        const f = this.tiles[position.x][position.y];
-        const posLeft = {x: position.x -1, y: position.y};
-        const posRight = {x: position.x +1, y: position.y};
-
-        if( this.isInside(posLeft) && 
-            this.tiles[posLeft.x][posLeft.y] instanceof PillFragment &&
-            this.tiles[posLeft.x][posLeft.y].pill == f.pill
-        )
-                return true;
-        
-        if( this.isInside(posRight) && 
-            this.tiles[posRight.x][posRight.y] instanceof PillFragment &&
-            this.tiles[posRight.x][posRight.y].pill == f.pill
-        )
-                    return true;
-
-        return false;
-
-    }
-    */
-
+ 
 }

@@ -1,6 +1,7 @@
 import Pill from './pill.js';
 import Raster from './raster.js';
 import ImageManager from './imageManager.js';
+import Virus from './virus.js';
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -8,36 +9,65 @@ const RASTER_SIZE = 25;
 
 // time vars
 var lastUpdate = Date.now();
-var gameSpeed = 200;
+var gameSpeed = 600;
+var game_started = false;
 
 // Game Objects
-var raster = new Raster(10,20,RASTER_SIZE);
+var raster = null;
 var pill =  null;
-
 const spawnPosition = {x: 4, y: 0};
+
 
 // init Image Load
 let allPillsLoaded = false;
 let allVirusesLoaded = false;
+let allEffectsLoaded = false;
 
-const virusNames = [
-    
+const colorIndex = [
+    "yellow",
+    "red",
+    "blue"
+];
+
+const virusImageNames = [
+    "T_virus",
+    "C_virus",
+    "Y_virus",
 ];
 const pillImageNames = [
+    "yellow_pill",
+    "red_pill", 
     "blue_pill", 
-     "red_pill", 
-    "yellow_pill"
 ];
-const pillImages = [];
 
-const images = new ImageManager(pillImageNames, () => {
-    pillImageNames.forEach(n => {
-        pillImages.push(images.getImage(n));
-        allPillsLoaded = true;
-        console.log("all pills loaded");
-    });
+
+let pillImages = [];
+let virusImages = [];
+let effectImages = [];
+
+const pillImageManager = new ImageManager(pillImageNames, () => {
+    pillImages = pillImageManager.getImageArray();
+    allPillsLoaded = true;
 });
-images.loadImages();
+pillImageManager.loadImages();
+
+
+const virusImageManager = new ImageManager(virusImageNames, () => {
+    virusImages = virusImageManager.getImageArray();
+    allVirusesLoaded = true;
+});
+virusImageManager.loadImages();
+
+
+const effectImageManager = new ImageManager(["fragment_effect"], () => {
+    effectImages = effectImageManager.images;
+    allEffectsLoaded = true;
+
+});
+effectImageManager.loadImages();
+
+
+
 
 // test variables
 
@@ -85,7 +115,7 @@ document.addEventListener('keyup', (e) => {
 setInterval(draw,60);
 
 function draw(){
-    if(allPillsLoaded){
+    if(allResLoaded()){
         update();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         raster.draw(ctx);
@@ -97,42 +127,55 @@ function draw(){
     }
 }
 
+function start(){
+    game_started = true;
+    raster = new Raster(10,20,RASTER_SIZE, effectImages["fragment_effect"]);
+    settleViruses(5);
+}
+
+function allResLoaded(){
+    return allPillsLoaded && allVirusesLoaded && allEffectsLoaded;
+}
 function update(){
 
     var now = Date.now();
     var dt = now - lastUpdate;
 
-    if(!raster.isBusy()){
-        if (pill == null) spawnPill();
+    if(allResLoaded() && game_started){
 
-        if(dt >=gameSpeed){
-            lastUpdate = now;
+        if(!raster.isBusy()){
+            if (pill == null) spawnPill();
 
-            // move pill towards ground
-            if(!pill.move({x: 0, y: 1})){
-                settlePill();
+            if(dt >=gameSpeed){
+                lastUpdate = now;
+
+                // move pill towards ground
+                if(!pill.move({x: 0, y: 1})){
+                    settlePill();
+                }
+
+                
             }
 
-            
-        }
 
-
-        if(upPressed){
-            pill.rotate();
-            upPressed = false;
-        }
-
-        if(leftPressed) pill.move({x: -1, y: 0});
-        if(rightPressed) pill.move({x: 1, y: 0});
-        if(downPressed){
-            if(!pill.move({x:  0, y: 1})){
-                settlePill();
+            if(upPressed){
+                pill.rotate();
+                upPressed = false;
             }
-        } 
+
+            if(leftPressed) pill.move({x: -1, y: 0});
+            if(rightPressed) pill.move({x: 1, y: 0});
+            if(downPressed){
+                if(!pill.move({x:  0, y: 1})){
+                    settlePill();
+                }
+            } 
+        }else{
+            raster.update();
+        }
     }else{
-        raster.update();
+        start();
     }
-
 }
 
 
@@ -150,7 +193,9 @@ function spawnPill(){
 
     pill = new Pill(    spawnPosition, 
                         pillImages[imageIdx1], 
+                        colorIndex[imageIdx1],
                         pillImages[imageIdx2], 
+                        colorIndex[imageIdx2],
                         RASTER_SIZE, 
                         raster);
 
@@ -158,5 +203,21 @@ function spawnPill(){
 
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min) ) + min;
+}
+
+function settleViruses(count){
+    for(let i = 0; i < count; i++){
+        const imageIndex = getRndInteger(0, virusImages.length);
+        const pos = {
+            x: getRndInteger(0, raster.width - 1),
+            y: getRndInteger(0, raster.height - 1),
+        };
+
+        const virus = new Virus(    virusImages[imageIndex],
+                                    pos, 
+                                    RASTER_SIZE, 
+                                    colorIndex[imageIndex]);
+        raster.tiles[pos.x][pos.y] = virus;
+    }
 }
 

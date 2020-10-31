@@ -33,4 +33,12 @@ export default class ImageManager{
         return(this.loadedImages == this.filenames.length)
     }
 
+    getImageArray(){
+
+        let arr = [];
+
+        this.filenames.forEach(f => arr.push(this.images[f]))
+
+        return arr;
+    }
 }
