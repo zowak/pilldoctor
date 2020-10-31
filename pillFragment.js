@@ -14,23 +14,43 @@ export default class PillFragment{
                         )
     }
 
-    move(vector){
-        if( this.position.x + vector.x >= 0 &&
-            this.position.y + vector.y >= 0 &&
-            this.position.x + vector.x < this.raster.width &&
-            this.position.y + vector.y < this.raster.height &&
-            this.raster.tiles[ this.position.x + vector.x][this.position.y + vector.y] === null
-            ){
-                
-            this.position ={
-                x: this.position.x + vector.x,
-                y: this.position.y + vector.y
-            }
+    checkMove(vector){
+        const newPos = {x: this.position.x + vector.x, y: this.position.y + vector.y};
 
+        if( this.raster.isInside(newPos) ){
+   
+            const tile = this.raster.tiles[newPos.x][newPos.y];
+
+            if(tile == null  || (tile instanceof PillFragment && tile.pill === this.pill)){
+
+                return true;
+            }
+    
+        }
+        
+        return false;
+
+    }
+
+    move(vector){
+
+        if(this.checkMove(vector)){
+
+
+            const newPos = {x: this.position.x + vector.x, y: this.position.y + vector.y};
+
+            // update raster
+            this.raster.tiles[this.position.x][this.position.y] = null;
+            this.raster.tiles[newPos.x][newPos.y] = this
+
+            // update position
+            this.position = newPos;
             return true;
         }
         
         return false;
     }
+
+
 
 }

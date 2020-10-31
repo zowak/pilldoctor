@@ -1,7 +1,7 @@
 import Pill from './pill.js';
 import PillFragment from './pillFragment.js';
 
-
+const DOWN_VECTOR = {x: 0, y: 1};
 const VECTORS = [
     [ 1, 0],
 //    [-1, 0],
@@ -16,7 +16,7 @@ export default class Raster{
         this.height = height;
         this.rastersize = rastersize;
         this.tiles = [];
-        this.fallingPills = false;
+        this.fragmentsAreFalling = false;
 
         this.init();
     }
@@ -51,15 +51,90 @@ export default class Raster{
 
     }
 
-    pastePill(pill){
-        this.tiles[pill.pillFragment1.position.x][pill.pillFragment1.position.y] = pill.pillFragment1;
-        this.tiles[pill.pillFragment2.position.x][pill.pillFragment2.position.y] = pill.pillFragment2;
+    checkForCompleteLinesByPill(pill){
+        if(pill.pillFragment1)this.checkForCompleteLines(pill.pillFragment1.position);
+        if(pill.pillFragment2)this.checkForCompleteLines(pill.pillFragment2.position);
 
-        
-       if(this.getTilesToRemove().length > 0){
-            this.updateFloatingTiles();
-       }
+    }
 
+    checkForCompleteLines(position){
+        const tilesToRemove = this.checkForCompleteLineHorizontal(position).concat(this.checkForCompleteLineVertical(position));
+        this.clearTiles(tilesToRemove);
+    }
+
+    clearTiles(tiles){
+        tiles.forEach(t => {
+            this.tiles[t.position.x][t.position.y] = null;
+            t.pill.destroyFragment(t);
+            this.fragmentsAreFalling = true;
+        });
+    }
+
+    /*
+    movePillDown(pill){
+
+        if(pill.move(DOWN_VECTOR))
+    }
+    */
+
+    checkForCompleteLineHorizontal(position){
+
+        const startTile = this.tiles[position.x][position.y];
+        const tiles = [startTile];
+
+        // look right 
+        for(let x = position.x + 1; x < this.width; x++){
+            let t = this.tiles[x][position.y];
+            if(t != null && startTile.image == t.image){
+                tiles.push(t);
+            }
+        }
+
+        //look left 
+        for(let x = position.x - 1; x >= 0; x--){
+            let t = this.tiles[x][position.y];
+            if(t != null && startTile.image == t.image){
+                tiles.push(t);
+            }
+        }
+
+        if(tiles.length >= 4) return tiles;
+
+        return [];
+
+    }
+
+
+    checkForCompleteLineVertical(position){
+
+        const startTile = this.tiles[position.x][position.y];
+        const tiles = [startTile];
+
+        // look under 
+        for(let y = position.y + 1; y < this.height; y++){
+            let t = this.tiles[position.x][y];
+            if(t != null && startTile.image == t.image){
+                tiles.push(t);
+            }
+        }
+
+        //look above 
+        for(let y = position.y - 1; y >= 0; y--){
+            let t = this.tiles[position.x][y];
+            if(t != null && startTile.image == t.image){
+                tiles.push(t);
+            }
+        }
+
+        if(tiles.length >= 4) return tiles;
+
+        return [];
+
+    }
+
+
+    isBusy(){
+        return this.fragmentsAreFalling;
     }
 
     isInside(position){
@@ -69,60 +144,41 @@ export default class Raster{
 
     }
 
-    getTilesToRemove(){
+    update(){
+       // update falling tiles
+       this.fragmentsAreFalling = false;
 
-        const tilesToRemove = [];
-
-        for(let x = 0; x < this.width; x++){
-            for(let y = 0; y < this.height; y++){
+       for(let x = 0; x < this.width; x++){
+           for(let y = this.height - 2; y >= 0; y--){
                 
-                if(this.tiles[x][y] != null){
-                    let t = this.checkForCompleteRow(
-                        {
-                            x: x,
-                            y: y
-                        }
-                    );
-                    
-                    t.forEach(e => tilesToRemove.push(e));
-                }
-      
-            }
-        }
+                const pos = {x: x, y: y};
+                const fragment = this.tiles[x][y];
 
-        return tilesToRemove;
+                if(this.isFloatingFragment(pos)){
+                    if(fragment.pill.move(DOWN_VECTOR)){
+                        this.fragmentsAreFalling = true;
+                        this.checkForCompleteLinesByPill(fragment.pill);
+                    } 
+                }
+           }
+       }
     }
 
-    updateFloatingTiles(){
-        this.fallingPills = false;
-
-        for(let x = 0; x < this.width; x++){
-            for(let y = this.height -2; y >= 0; y--){
-                let pos = {x: x,y: y};
-                if(this.isFloatingTile(pos)){
-                    const p = this.tiles[pos.x][pos.y];
-                    this.tiles[x][y] = null;
-                    p.move({x: 0, y: 1});
-                    this.tiles[x][y+1] = p;
-
-                    this.fallingPills = true;
-                }
-            }
-        }
-    }
-
-    isFloatingTile(position){
+   
+    
+    isFloatingFragment(position){
         return( 
                 (
                     position.y < this.height -1  && 
                     this.tiles[position.x][position.y] != null && 
                     this.tiles[position.x][position.y] instanceof PillFragment &&
-                    !this.pillStickToOtherFragment(position) &&
                     this.tiles[position.x][position.y+1] == null 
                 )
             );
     }
+    
 
+    /*
     pillStickToOtherFragment(position){
 
         const f = this.tiles[position.x][position.y];
@@ -144,50 +200,6 @@ export default class Raster{
         return false;
 
     }
-
-    checkForCompleteRow(position){
-
-
-        const tiles = [];
-
-        for(let v = 0; v < VECTORS.length; v++){
-
-            let t = this.getSameTilesInARow(position, {x: VECTORS[v][0], y: VECTORS[v][1]});
-
-          
-            if(t.length >= 4) {
-                t.forEach(e => tiles.push(e));
-            }
-        }
-        
-        return tiles;
-
-    }
-
-
-
-    getSameTilesInARow(position, vector){
-
-        const tiles = [];
-
-        let t = 0;
-        let pos = position;
-        let startImage = this.tiles[pos.x][pos.y].image;
-
-        while(  this.isInside(pos) && 
-                this.tiles[pos.x][pos.y] != null &&
-                this.tiles[pos.x][pos.y].image == startImage){
-            
-            tiles.push(pos);
-
-            t++;
-            pos = {
-                x: position.x + (vector.x * t),
-                y: position.y + (vector.y * t)
-            }
-        }
-
-        return tiles;
-    }
+    */
 
 }

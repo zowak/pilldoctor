@@ -17,10 +17,15 @@ var pill =  null;
 const spawnPosition = {x: 4, y: 0};
 
 // init Image Load
-let allImagesLoaded = false;
+let allPillsLoaded = false;
+let allVirusesLoaded = false;
+
+const virusNames = [
+    
+];
 const pillImageNames = [
     "blue_pill", 
-   "red_pill", 
+     "red_pill", 
     "yellow_pill"
 ];
 const pillImages = [];
@@ -28,17 +33,15 @@ const pillImages = [];
 const images = new ImageManager(pillImageNames, () => {
     pillImageNames.forEach(n => {
         pillImages.push(images.getImage(n));
-        allImagesLoaded = true;
+        allPillsLoaded = true;
         console.log("all pills loaded");
     });
 });
 images.loadImages();
 
+// test variables
 
 // game variables
-var fallingTiles = [];
-
-
 
 // Input Handle
 var leftPressed = false;
@@ -82,7 +85,7 @@ document.addEventListener('keyup', (e) => {
 setInterval(draw,60);
 
 function draw(){
-    if(allImagesLoaded){
+    if(allPillsLoaded){
         update();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         raster.draw(ctx);
@@ -99,17 +102,11 @@ function update(){
     var now = Date.now();
     var dt = now - lastUpdate;
 
-    if(!raster.fallingPills){
+    if(!raster.isBusy()){
         if (pill == null) spawnPill();
 
         if(dt >=gameSpeed){
             lastUpdate = now;
-
-            if(fallingTiles.length > 0 ){
-                raster.moveTilesTowardsGround(fallingTiles);
-                fallingTiles = raster.getFallingTiles();
-            }
-
 
             // move pill towards ground
             if(!pill.move({x: 0, y: 1})){
@@ -133,25 +130,18 @@ function update(){
             }
         } 
     }else{
-        raster.updateFloatingTiles();
+        raster.update();
     }
 
 }
 
 
-function settlePill(){
-    raster.pastePill(pill);
+function settlePill(){    
 
-    const tilesToRemove = raster.getTilesToRemove();
-    tilesToRemove.forEach(t => 
-        raster.tiles[t.x][t.y] = null    
-    );
+    pill.move({x: 0, y: 0});
 
-    if(tilesToRemove.length > 0)  fallingTiles = raster.getFallingTiles();
-
+    raster.checkForCompleteLinesByPill(pill);
     pill = null;
-
-   
 }
 
 function spawnPill(){

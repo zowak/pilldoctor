@@ -22,26 +22,28 @@ export default class Pill{
 
     draw(ctx){
 
-        this.pillFragment1.draw(ctx);
-        this.pillFragment2.draw(ctx);   
+        if(this.pillFragment1 != null)this.pillFragment1.draw(ctx);
+        if(this.pillFragment2 != null)this.pillFragment2.draw(ctx);   
        
+    }
+
+    destroyFragment(fragment){
+        if(this.pillFragment1 === fragment) this.pillFragment1 = null;
+        if(this.pillFragment2 === fragment) this.pillFragment2 = null;
     }
 
     
     move(vector){
 
-        let fragment1Postition = this.pillFragment1.position;
-        let fragment2Postition = this.pillFragment2.position;
 
-        if (    this.pillFragment1.move(vector) &&
-                this.pillFragment2.move(vector)
+        if (    (this.pillFragment1 == null || this.pillFragment1.checkMove(vector)) &&
+                (this.pillFragment2 == null || this.pillFragment2.checkMove(vector))
             )
         {
+                if(this.pillFragment1 != null)this.pillFragment1.move(vector);
+                if(this.pillFragment2 != null)this.pillFragment2.move(vector);
                 return true;
         }
-
-        this.pillFragment1.position = fragment1Postition;
-        this.pillFragment2.position = fragment2Postition;
 
         return false;
 
