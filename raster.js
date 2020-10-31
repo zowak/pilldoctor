@@ -55,6 +55,7 @@ export default class Raster{
         this.tiles[pill.pillFragment1.position.x][pill.pillFragment1.position.y] = pill.pillFragment1;
         this.tiles[pill.pillFragment2.position.x][pill.pillFragment2.position.y] = pill.pillFragment2;
 
+        
        if(this.getTilesToRemove().length > 0){
             this.updateFloatingTiles();
        }
