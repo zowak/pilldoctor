@@ -5,16 +5,16 @@ import ImageManager from './imageManager.js';
 import { getRndInteger }  from './utils.js';
 
 export const RASTER_SIZE = 25;
-const RASTER_WIDTH = 10;
-const RASTER_HEIGHT = 20;
+export const RASTER_WIDTH = 10;
+export const RASTER_HEIGHT = 20;
 
 const COLOR_RED = 0;
 const COLOR_BLUE = 1;
 const COLOR_YELLOW = 2;
 const COLORS = [
     "red",
-    "blue",
-    "yellow"
+//    "blue",
+//    "yellow"
 ];
 
 const PILL_SPAWN_POSITION = {x: 4, y: 0};
@@ -30,6 +30,8 @@ export default class Raster{
 
         this.currentPill;
         this.remainingViruses = 0;
+
+        this.gameOver = false;
 
         this.fragmentsAreFalling = false;
         this.removedTiles = [];
@@ -99,7 +101,6 @@ export default class Raster{
         }
         
         this.removedTiles.forEach(t => {
-            if(t instanceof Virus) this.remainingViruses--;
             ctx.drawImage(this.effectGfx, t.position.x * RASTER_SIZE, t.position.y * RASTER_SIZE );
         });
         this.removedTiles = [];
@@ -135,6 +136,8 @@ export default class Raster{
             if(t instanceof PillFragment){
                 t.pill.destroyFragment(t);
                 this.fragmentsAreFalling = true;
+            }else if(t instanceof Virus){
+                this.remainingViruses--;
             }
         });
     }
@@ -259,6 +262,10 @@ export default class Raster{
                             this.fragmentGfx[fragmentIdx2], 
                             COLORS[fragmentIdx2],
                             this);
+
+        //check for game over
+        if(!this.currentPill.move({x: 0, y: 0})) this.gameOver = true;
+        console.log("game over: " + this.gameOver);
         
         return this.currentPill;
     

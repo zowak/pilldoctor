@@ -1,10 +1,11 @@
 import Pill from './pill.js';
-import Raster from './raster.js';
+import Raster, { RASTER_SIZE, RASTER_WIDTH, RASTER_HEIGHT } from './raster.js';
 import ImageManager from './imageManager.js';
 import Virus from './virus.js';
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const virusDisplay = document.getElementById("virus-display");
 
 // time vars
 var lastUpdate = Date.now();
@@ -62,9 +63,24 @@ raster.load(start);
 
 function draw(){
     update();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    raster.draw(ctx);
-    if(pill != null)pill.draw(ctx);
+
+    if(!raster.gameOver && raster.remainingViruses > 0){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        raster.draw(ctx);
+        if(pill != null)pill.draw(ctx);
+    }else if (raster.remainingViruses == 0){
+        ctx.fillStyle = "green";
+        ctx.textAlign = "center";
+        ctx.font = "20px Arial";
+        ctx.fillText("S U C C E S S !", RASTER_WIDTH/2 * RASTER_SIZE, RASTER_HEIGHT/2 * RASTER_SIZE);
+    }
+    else{
+        ctx.fillStyle = "violet";
+        ctx.textAlign = "center";
+        ctx.font = "20px Arial";
+        ctx.fillText("G A M E  O V E R !", RASTER_WIDTH/2 * RASTER_SIZE, RASTER_HEIGHT/2 * RASTER_SIZE);
+    }
+       
 }
 
 function start(){
@@ -80,7 +96,9 @@ function update(){
     var now = Date.now();
     var dt = now - lastUpdate;
 
-    if(!raster.isBusy()){
+    virusDisplay.innerHTML = "Viruses: " + raster.remainingViruses;
+
+    if(!raster.isBusy() && !raster.gameOver && raster.remainingViruses != 0){
         if (pill == null) pill = raster.spawnPill();
 
         if(dt >=gameSpeed){
