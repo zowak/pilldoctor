@@ -8,14 +8,13 @@ const ROTATION_VECTORS = [
 ];
 export default class Pill{
 
-    constructor(position, image1, color1, image2, color2, fragmentSize, raster){
+    constructor(position, image1, color1, image2, color2, raster){
         this.position = position;
 
-        this.pillFragment1 =  new PillFragment(position,image1,raster, fragmentSize, this, color1);
+        this.pillFragment1 =  new PillFragment(position,image1,raster, this, color1);
         let fragmet2Pos = {x: this.position.x + 1, y: this.position.y}
-        this.pillFragment2 =  new PillFragment(fragmet2Pos,image2,raster,fragmentSize, this, color2);
+        this.pillFragment2 =  new PillFragment(fragmet2Pos,image2,raster, this, color2);
 
-        this.fragmentSize = fragmentSize;
         this.raster = raster;
         this.rotation = 3; // 0..3
     }

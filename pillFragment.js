@@ -1,17 +1,18 @@
+import * as Raster from './raster.js'
+
 export default class PillFragment{
-    constructor(position, image, raster, fragmentSize, pill, color){
+    constructor(position, image, raster, pill, color){ 
         this.position = position;
         this.image = image;
         this.raster = raster;
-        this.fragmentSize = fragmentSize;
         this.pill = pill;
         this.color = color;
     }
 
     draw(ctx){
         ctx.drawImage(  this.image, 
-                        this.position.x * this.fragmentSize,
-                        this.position.y * this.fragmentSize
+                        this.position.x * Raster.RASTER_SIZE,
+                        this.position.y * Raster.RASTER_SIZE
                         )
     }
 
